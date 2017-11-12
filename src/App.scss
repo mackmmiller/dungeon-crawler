@@ -1,0 +1,92 @@
+$green: #09630B;
+
+html,body,#root,.App {
+	height: 100%;
+	color: white;
+}
+
+nav {
+	background-color: $green;
+	padding: 1%;
+}
+
+#game {
+	margin: 1%;
+	height: 73.5%;
+	background-color: #585a5b;
+	border: 5px solid (#585a5b * .80);
+	border-radius: 5px;
+	position: relative;
+	#title {
+		text-align: center;
+		font-family: 'Gloria Hallelujah', cursive;
+		font-size: 24px;
+	}
+	#hud {
+		background-color: #e99e38;
+		padding: 0.5%;
+		border: 3px solid #b0743b;
+		border-radius: 5px;
+		margin: 10px 10% 10px 10%;
+		display: flex;
+		justify-content: space-between;
+		.hudElement {
+			display: inline-block;
+			border: 3px solid #b0743b;
+			border-radius: 5px;
+			width: percentage(1/5);
+			text-align: center;
+		}
+	}
+	#screen {
+		background-color: black;
+		border: 5px solid black;
+		border-radius: 5px;
+		position: absolute;
+		padding: 10px;
+		left: 5%;
+		right: 5%;
+		top: 23%;
+		bottom: 3%;
+		.row {
+			display: flex;
+			height: 10px;
+			.cell {
+				width: 10px;
+				height: 10px;
+				//border: 0.5px solid white;
+			}
+			.floor {
+				background-color: blue;
+			}
+			.door {
+				background-color: yellow;
+			}
+			.O,.N,.E,.S,.W,.D {
+				color: white;
+				text-align: center;
+				font-size: 8px;
+			}
+			.D {
+				color: black;
+			}
+		}
+	}
+}
+
+footer {
+	text-align: center;
+	background-color: $green;
+	padding: 0.75%;
+	#signature {
+		font-size: 14px;
+		margin-bottom: 0;
+	}
+	#credit {
+		font-size: 10px;
+	}
+	a {
+		text-decoration: none;
+	}
+}
+

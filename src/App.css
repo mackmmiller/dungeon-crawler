@@ -1,0 +1,73 @@
+html, body, #root, .App {
+  height: 100%;
+  color: white; }
+
+nav {
+  background-color: #09630B;
+  padding: 1%; }
+
+#game {
+  margin: 1%;
+  height: 73.5%;
+  background-color: #585a5b;
+  border: 5px solid #464849;
+  border-radius: 5px;
+  position: relative; }
+  #game #title {
+    text-align: center;
+    font-family: 'Gloria Hallelujah', cursive;
+    font-size: 24px; }
+  #game #hud {
+    background-color: #e99e38;
+    padding: 0.5%;
+    border: 3px solid #b0743b;
+    border-radius: 5px;
+    margin: 10px 10% 10px 10%;
+    display: flex;
+    justify-content: space-between; }
+    #game #hud .hudElement {
+      display: inline-block;
+      border: 3px solid #b0743b;
+      border-radius: 5px;
+      width: 20%;
+      text-align: center; }
+  #game #screen {
+    background-color: black;
+    border: 5px solid black;
+    border-radius: 5px;
+    position: absolute;
+    padding: 10px;
+    left: 5%;
+    right: 5%;
+    top: 23%;
+    bottom: 3%; }
+    #game #screen .row {
+      display: flex;
+      height: 10px; }
+      #game #screen .row .cell {
+        width: 10px;
+        height: 10px; }
+      #game #screen .row .floor {
+        background-color: blue; }
+      #game #screen .row .door {
+        background-color: yellow; }
+      #game #screen .row .O, #game #screen .row .N, #game #screen .row .E, #game #screen .row .S, #game #screen .row .W, #game #screen .row .D {
+        color: white;
+        text-align: center;
+        font-size: 8px; }
+      #game #screen .row .D {
+        color: black; }
+
+footer {
+  text-align: center;
+  background-color: #09630B;
+  padding: 0.75%; }
+  footer #signature {
+    font-size: 14px;
+    margin-bottom: 0; }
+  footer #credit {
+    font-size: 10px; }
+  footer a {
+    text-decoration: none; }
+
+/*# sourceMappingURL=App.css.map */

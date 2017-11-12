@@ -1,0 +1,14 @@
+Components:
+  ☐ App
+  ☐ Floor
+  ☐ Room
+  ☐ Screen
+  ☐ Character
+  ☐ HUD
+
+App:
+  ☐ Constructor
+  ☐ Render
+
+Floor:
+  ☐ 
