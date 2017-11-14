@@ -48,15 +48,19 @@ nav {
         width: 10px;
         height: 10px; }
       #game #screen .row .floor {
-        background-color: blue; }
+        background-color: #8e766a; }
       #game #screen .row .door {
         background-color: yellow; }
-      #game #screen .row .O, #game #screen .row .N, #game #screen .row .E, #game #screen .row .S, #game #screen .row .W, #game #screen .row .D {
-        color: white;
-        text-align: center;
-        font-size: 8px; }
-      #game #screen .row .D {
-        color: black; }
+      #game #screen .row .p {
+        background-color: blue; }
+      #game #screen .row .m {
+        background-color: red; }
+      #game #screen .row .w {
+        background-color: gold; }
+      #game #screen .row .f {
+        background-color: green; }
+      #game #screen .row .s {
+        background-color: purple; }
 
 footer {
   text-align: center;

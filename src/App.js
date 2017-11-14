@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import './App.css';
 
-const c = {height: 100, width: 100, max_rooms: 20, size_range: [6,15]};
+const c = {height: 100, width: 100, max_rooms: 20, size_range: [4,20]};
 
 const createFloor = () => {
 //HELPER FUNCTIONS FOR CREATING THE MAP
@@ -40,7 +40,7 @@ const createFloor = () => {
   for (let i=0; i<c.height; i++) {
     grid.push([]);
     for (let j=0; j<c.width; j++) {
-      grid[i].push({type:0});
+      grid[i].push({type:"0"});
     }
   }
 
@@ -119,9 +119,38 @@ const createFloor = () => {
   return growMap(grid, [firstRoom]);
 }
 
-/*function initializePlayer() {
+function populateFloor() {
+  const grid = createFloor();
+  const player = [{type: "player", id: "p"}];
+  const monster = [];
+  for (let i=0;i<10;i++) {
+    monster.push({type: "monster", id: "m"});
+  }
+  const weapon = [];
+  for (let i=0; i<4; i++) {
+    weapon.push({type: "weapon", id:"w"});
+  }
+  const food = [];
+  for (let i=0; i<10;i++) {
+    food.push({type: "food", id:"f"});
+  }
+  const stairs = [{type: "stairs", id:"s"}];
 
-}*/
+  let currentPosition = [];
+  [stairs,food,weapon,monster,player].forEach(piece => {
+    while (piece.length) {
+      const x = Math.floor(Math.random()*c.width);
+      const y = Math.floor(Math.random()*c.height);
+      if (grid[y][x].type==="floor") {
+        if (piece[0].type === "player") {
+          currentPosition = {x: x, y: y};
+        }
+        grid[y][x]=piece.pop();
+      }
+    }
+  });
+  return {floor: grid, currentPosition: currentPosition};
+}
 
 function HudElement(props) {
   return (
@@ -131,6 +160,7 @@ function HudElement(props) {
 
 class Hud extends Component {
   render() {
+    console.log("Hud rendering");
     return (
       <div id="hud">
         <HudElement className={"hudElement"} id={"health"} name={"HP"} displays={this.props.hud.health}/>
@@ -142,18 +172,11 @@ class Hud extends Component {
   }
 }
 
-class Player extends Component {
-  render() {
-    return(
-      <div className="player"></div>
-    )
-  }
-}
-
 function Map(props) {
-  let floor = createFloor();
+  const floor = props.floor;
   let k=1;
   let m=1;
+  console.log("Map rendering");
   return (
     <div id="screen">
       {floor.map((element,index) => {
@@ -162,7 +185,7 @@ function Map(props) {
           {
             element.map((cell, i) => {
               return (
-                <div className={(cell.type === 'floor' || cell.type === 'door') ? 'cell ' + cell.type + " " + cell.id : 'cell'} key={i+1} id={m++}>{cell.id}</div>
+                <div className={(cell.type==="0")? 'cell' : 'cell ' + cell.type + " " + cell.id} key={i+1} id={m++}></div>
               );
             })
           }
@@ -175,10 +198,10 @@ function Map(props) {
 
 class Screen extends Component {
   render() {
+    console.log("Screen rendering");
     return (
     <div>
-      <Player currentPosition={this.props.currentPosition}/>
-      <Map />
+      <Map floor={this.props.floor} currentPosition={this.props.currentPosition}/>
     </div>
     )
   }
@@ -199,31 +222,100 @@ class Game extends Component {
         level: undefined,
         nextLevel: undefined,
       },
+      map: [],
     }
   }
 
   componentDidMount() {
+    const floor = this.generateMap();
     this.setState({
-      currentPosition: {
-        x: 0,
-        y: 0,
-      },
+      currentPosition: floor.currentPosition,
       hud: {
         health: 100,
         weapon: "Stick",
         attack: 10,
         level: 1,
         nextLevel: 100 + "XP",
-      }
+      },
+      map: floor.floor
+    })
+    window.addEventListener('keydown', this.keydown);
+  }
+
+  keydown = (e) => {
+    const currPos = this.state.currentPosition;
+    let target = {};
+    console.log(currPos);
+    switch (e.key) {
+      case "w":
+      case "ArrowUp":
+        e.preventDefault();
+        target = {x: currPos.x, y: currPos.y-1}
+        break;
+      case "s":
+      case "ArrowDown":
+        e.preventDefault();
+        target = {x: currPos.x, y: currPos.y+1}
+        break;
+      case "d":
+      case "ArrowRight":
+        target = {x: currPos.x+1, y: currPos.y}
+        break;
+      case "a":
+      case "ArrowLeft":
+        target = {x: currPos.x-1, y: currPos.y}
+        break;
+      default:
+        console.log("Key pressed");
+        return;
+    }
+    let targetType = this.state.map[target.y][target.x].type;
+    if (targetType==="floor"||targetType==="door") {
+      this.movePlayer(currPos, target);
+    } else if (targetType==="monster") {
+      this.battleMonster(target);
+    } else if (targetType==="weapon"||targetType==="food") {
+      this.pickUpItem(target);
+    } else {
+      return;
+    }
+  }
+
+  movePlayer(currPos, target) {
+    console.log(currPos, "moving to", target);
+    let newMap = this.state.map;
+    newMap[currPos.y][currPos.x] = {type: "floor", id:"floor"};
+    newMap[target.y][target.x] = {type: "player", id:"p"};
+    this.setState({
+      currentPosition: target,
+      map: newMap,
     })
   }
 
+  battleMonster(target) {
+    console.log("battling", target);
+    let updateHud = this.state.hud;
+    updateHud.health -= 5;
+    this.setState({
+      hud: updateHud
+    })
+  }
+
+  pickUpItem(target) {
+    console.log("picking up", target);
+  }
+
+  generateMap() {
+    return populateFloor()
+  }
+
   render() {
+    console.log("Game rendering");
     return (
       <div id="game">
         <div id="title">Dungeon Crawler</div>
         <Hud hud={this.state.hud}/>
-        <Screen currentPosition={this.state.currentPosition}/>
+        <Screen currentPosition={this.state.currentPosition} floor={this.state.map}/>
       </div>
     );
   }
