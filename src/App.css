@@ -1,8 +1,13 @@
 html, body, #root, .App {
   height: 100%;
-  color: white; }
+  color: white;
+  position: relative; }
 
 nav {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
   background-color: #09630B;
   padding: 1%; }
 
@@ -12,7 +17,10 @@ nav {
   background-color: #585a5b;
   border: 5px solid #464849;
   border-radius: 5px;
-  position: relative; }
+  position: absolute;
+  top: 10%;
+  left: 0;
+  right: 0; }
   #game #title {
     text-align: center;
     font-family: 'Gloria Hallelujah', cursive;
@@ -32,24 +40,23 @@ nav {
       width: 20%;
       text-align: center; }
   #game #visible {
-    background-color: black;
-    border: 5px solid black;
+    background-color: #2A2A2A;
+    border: 5px solid #2A2A2A;
     border-radius: 5px;
     position: absolute;
     padding: 10px;
     left: 5%;
     right: 5%;
-    top: 23%;
+    top: 15%;
     bottom: 3%; }
     #game #visible .row {
       display: flex;
       height: 5%;
-      max-height: 15px;
-      width: 33.3333333333%;
-      margin-left: 33.3333333333%;
-      margin-right: 33.3333333333%; }
+      width: 65%;
+      max-width: 600px;
+      margin: 0 auto; }
       #game #visible .row .cell {
-        width: 15px;
+        width: 5%;
         height: 100%; }
       #game #visible .row .floor, #game #visible .row .door {
         background-color: #8e766a; }
@@ -65,8 +72,39 @@ nav {
         background-color: green; }
       #game #visible .row .s {
         background-color: purple; }
+      #game #visible .row .b {
+        background-color: white; }
+  #game #endgame {
+    margin-top: 10%;
+    text-align: center;
+    font-size: 3em; }
+    #game #endgame .btn {
+      -webkit-border-radius: 5;
+      -moz-border-radius: 5;
+      border-radius: 5px;
+      font-family: Arial;
+      color: #ffffff;
+      font-size: 20px;
+      background: #d93442;
+      padding: 8px 20px 10px 20px;
+      text-decoration: none; }
+    #game #endgame .btn:hover {
+      background: #d60b0b;
+      text-decoration: none; }
+  @media screen and (max-width: 600px) {
+    #game #hud {
+      font-size: 12px;
+      margin: 5px 10% 10px 10%; }
+    #game #visible .row {
+      margin-left: 2.5%;
+      margin-right: 2.5%;
+      width: 95%; } }
 
 footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   text-align: center;
   background-color: #09630B;
   padding: 0.75%; }
@@ -77,5 +115,31 @@ footer {
     font-size: 10px; }
   footer a {
     text-decoration: none; }
+
+@media screen and (orientation: landscape) and (max-width: 750px) {
+  nav {
+    padding: 0.5%; }
+
+  #game {
+    top: 12%;
+    height: 70%; }
+    #game #title {
+      font-size: 16px;
+      margin: 0; }
+    #game #hud {
+      margin: 3px 10% 3px 10%;
+      font-size: 12px; }
+    #game #visible {
+      padding: 0;
+      top: 26%;
+      left: 25%;
+      right: 25%; }
+
+  footer {
+    padding: 0.30%; }
+    footer #signature {
+      font-size: 10px; }
+    footer #credit {
+      font-size: 6px; } }
 
 /*# sourceMappingURL=App.css.map */

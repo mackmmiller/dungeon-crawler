@@ -127,7 +127,7 @@ function populateFloor() {
     monster.push({type: "monster", id: "m"});
   }
   const weapon = [];
-  for (let i=0; i<(Math.floor(Math.random()*(3)+1)); i++) {
+  for (let i=0; i<(Math.floor(Math.random()*(2)+1)); i++) {
     weapon.push({type: "weapon", id:"w"});
   }
   const food = [];
@@ -136,6 +136,7 @@ function populateFloor() {
   }
   const stairs = [{type: "stairs", id:"s"}];
 
+  let stairsOrBoss=[];
   let currentPosition = [];
   let monsters = {};
   let weapons = [{name:"Stick", damage:10},{name:"Pipe", damage:12},{name:"Club", damage:14},{name:"Dagger", damage:18},{name:"Sword", damage:24},{name:"Two Swords", damage:30},{name:"Rubber Chicken", damage:40}];
@@ -148,12 +149,14 @@ function populateFloor() {
           currentPosition = {x: x, y: y};
         } else if (piece[0].type==="monster") {
           monsters[x+","+y]= ({attack: 5, health: 30});
+        } else if (piece[0].type==="stairs") {
+          stairsOrBoss = {x: x, y: y};
         }
         grid[y][x]=piece.pop();
       }
     }
   });
-  return {floor: grid, currentPosition: currentPosition, monsters: monsters, weapons: weapons};
+  return {floor: grid, currentPosition: currentPosition, monsters: monsters, weapons: weapons, stairs: stairsOrBoss};
 }
 
 function HudElement(props) {
@@ -202,11 +205,20 @@ function Map(props) {
 class Screen extends Component {
   render() {
     //console.log("Screen rendering");
-    return (
-    <div id={"screen"}>
-      <Map floor={this.props.floor} currentPosition={this.props.currentPosition} visible={this.props.visible}/>
-    </div>
-    )
+    if (this.props.gameover===false) {
+      return (
+      <div id={"screen"}>
+        <Map floor={this.props.floor} currentPosition={this.props.currentPosition} visible={this.props.visible}/>
+      </div>
+      )
+    } else {
+      return (
+      <div id={"endgame"}>
+        <p>Gameover!</p>
+        <button id="playAgain" className={"btn"} onClick={this.props.handleClick}>Play again?</button>
+      </div>
+      )
+    }
   }
 }
 
@@ -229,7 +241,11 @@ class Game extends Component {
       map: floor.floor,
       floor: 1,
       monsters: floor.monsters,
+      stairsAreBoss: false,
+      stairs: floor.stairs,
+      gameover: false,
     }
+    this.playAgain = this.playAgain.bind(this);
   }
 
   componentDidMount() {
@@ -266,10 +282,11 @@ class Game extends Component {
         return;
     }
     let targetType = this.state.map[target.y][target.x].type;
+    console.log(targetType);
     if (targetType==="floor"||targetType==="door") {
       this.movePlayer(currPos, target);
-    } else if (targetType==="monster") {
-      this.battleMonster(target);
+    } else if (targetType==="monster"||targetType==="boss") {
+      this.battleMonster(target, targetType);
     } else if (targetType==="weapon"||targetType==="food") {
       this.pickUpItem(target, targetType);
     } else if(targetType==="stairs") {
@@ -288,15 +305,20 @@ class Game extends Component {
     this.setVisibility();
   }
 
-  battleMonster(target) {
+  battleMonster(target, targetType) {
     const state = this.state;
-    const monster = state.monsters[target.x+","+target.y];
+    const monster = (targetType==="monster") ? state.monsters[target.x+","+target.y] : state.stairs;
     const playerDamage = Math.round(Math.random()*state.hud.attack);
     const monsterDamage = Math.round(Math.random()*(monster.attack+(this.state.floor/10)));
     const updateHud = state.hud;
     updateHud.health -= monsterDamage;
+    const updateStairs = state.stairs;
     const updateMonsters = state.monsters;
-    updateMonsters[target.x+","+target.y].health -= playerDamage;
+    if (targetType==="monster") {
+      updateMonsters[target.x+","+target.y].health -= playerDamage;
+    } else {
+      updateStairs.health -= playerDamage;
+    }
     if (monster.health<=0) {
       this.movePlayer(undefined, target);
       const xp = Math.round(Math.random()*((10+this.state.floor/10)-5+1)+5);
@@ -305,14 +327,22 @@ class Game extends Component {
         updateHud.level++;
         updateHud.nextLevel = ((updateHud.level/10)+1)*100;
       }
-    } else if (this.state.hud.health<=0) {
-      console.log("You lose");
-      //TODO: BUILD YOU LOSE MODAL OR SOMETHING SIMILAR
     }
-    this.setState({
-      hud: updateHud,
-      monsters: updateMonsters,
-    })
+    if (this.state.hud.health<=0) {
+      this.setState({
+        gameover: true,
+      })
+    } else if (this.state.stairs.health<=0) {
+      this.setState({
+        gameover: true,
+      })
+    } else {
+      this.setState({
+        hud: updateHud,
+        monsters: updateMonsters,
+        stairs: updateStairs
+      })
+    }
   }
 
   pickUpItem(target, targetType) {
@@ -322,9 +352,11 @@ class Game extends Component {
       let addHealth = Math.round(Math.random()*((10+this.state.hud.level)-5)+5);
       hud.health += addHealth;
     } else {
-      nextWeapon++;
-      hud.weapon = this.props.props.weapons[nextWeapon].name;
-      hud.attack = this.props.props.weapons[nextWeapon].damage;
+      if (nextWeapon<7) {
+        nextWeapon++;
+        hud.weapon = this.props.props.weapons[nextWeapon].name;
+        hud.attack = this.props.props.weapons[nextWeapon].damage;
+      }
     }
     this.setState({
         hud: hud,
@@ -343,8 +375,22 @@ class Game extends Component {
         map: x.floor,
         monsters: x.monsters,
         floor: dungeon,
+        stairsAreBoss: false,
+        stairs: x.stairs
       })
+      if (dungeon===5) {
+        this.stairsAreBoss();
+      }
     }
+  }
+
+  stairsAreBoss() {
+    const state = this.state;
+    const makeBoss = state.map[this.state.stairs.y][this.state.stairs.x] = {type: "boss", id: "b", attack: 1.5*this.state.hud.attack, health: 1.5*this.state.hud.health};
+    this.setState({
+      stairsAreBoss: true,
+      stairs: makeBoss,
+    })
   }
 
   setVisibility() {
@@ -361,13 +407,50 @@ class Game extends Component {
     })
   }
 
+  setHud() {
+    let hud = this.state.hud;
+    hud.health = 100;
+    hud.level = 1;
+    hud.xp = 0;
+    hud.nextLevel = 100;
+    this.setState({
+      hud: hud,
+    })
+  }
+
+  playAgain() {
+    let x = populateFloor();
+    this.setState({
+      currentPosition: x.currentPosition,
+      visible: {x1: undefined, y1: undefined, x2: undefined, y2: undefined},
+      weaponID: 0,
+      hud: {
+        health: undefined,
+        weapon: undefined,
+        attack: undefined,
+        level: undefined,
+        xp: undefined,
+        nextLevel: undefined,
+      },
+      map: x.floor,
+      floor: 1,
+      monsters: x.monsters,
+      stairsAreBoss: false,
+      stairs: x.stairs,
+      gameover: false,
+    });
+    this.setHud();
+    this.setVisibility();
+    this.setWeapons();
+  }
+
   render() {
     //console.log("Game rendering");
     return (
       <div id="game">
         <div id="title">Dungeon Crawler</div>
         <Hud hud={this.state.hud}/>
-        <Screen currentPosition={this.state.currentPosition} floor={this.state.map} visible={this.state.visible}/>
+        <Screen currentPosition={this.state.currentPosition} floor={this.state.map} visible={this.state.visible} gameover={this.state.gameover} handleClick={this.playAgain}/>
       </div>
     );
   }
