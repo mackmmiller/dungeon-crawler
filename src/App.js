@@ -127,16 +127,18 @@ function populateFloor() {
     monster.push({type: "monster", id: "m"});
   }
   const weapon = [];
-  for (let i=0; i<4; i++) {
+  for (let i=0; i<(Math.floor(Math.random()*(3)+1)); i++) {
     weapon.push({type: "weapon", id:"w"});
   }
   const food = [];
-  for (let i=0; i<10;i++) {
+  for (let i=0; i<(Math.round(Math.random()*(10-4)+5));i++) {
     food.push({type: "food", id:"f"});
   }
   const stairs = [{type: "stairs", id:"s"}];
 
   let currentPosition = [];
+  let monsters = {};
+  let weapons = [{name:"Stick", damage:10},{name:"Pipe", damage:12},{name:"Club", damage:14},{name:"Dagger", damage:18},{name:"Sword", damage:24},{name:"Two Swords", damage:30},{name:"Rubber Chicken", damage:40}];
   [stairs,food,weapon,monster,player].forEach(piece => {
     while (piece.length) {
       const x = Math.floor(Math.random()*c.width);
@@ -144,12 +146,14 @@ function populateFloor() {
       if (grid[y][x].type==="floor") {
         if (piece[0].type === "player") {
           currentPosition = {x: x, y: y};
+        } else if (piece[0].type==="monster") {
+          monsters[x+","+y]= ({attack: 5, health: 30});
         }
         grid[y][x]=piece.pop();
       }
     }
   });
-  return {floor: grid, currentPosition: currentPosition};
+  return {floor: grid, currentPosition: currentPosition, monsters: monsters, weapons: weapons};
 }
 
 function HudElement(props) {
@@ -160,7 +164,7 @@ function HudElement(props) {
 
 class Hud extends Component {
   render() {
-    console.log("Hud rendering");
+    //console.log("Hud rendering");
     return (
       <div id="hud">
         <HudElement className={"hudElement"} id={"health"} name={"HP"} displays={this.props.hud.health}/>
@@ -177,7 +181,7 @@ function Map(props) {
   const visible = props.visible;
   let k=1;
   let m=1;
-  console.log("Map rendering");
+  //console.log("Map rendering");
   return (
     <div id="visible">
       {floor.map((element,index) => {
@@ -197,7 +201,7 @@ function Map(props) {
 
 class Screen extends Component {
   render() {
-    console.log("Screen rendering");
+    //console.log("Screen rendering");
     return (
     <div id={"screen"}>
       <Map floor={this.props.floor} currentPosition={this.props.currentPosition} visible={this.props.visible}/>
@@ -209,31 +213,35 @@ class Screen extends Component {
 class Game extends Component {
   constructor(props) {
     super(props);
-    const floor = this.generateMap();
-    const weapons = [{name: "Stick",damage:10},{name: "Pipe",damage:15}];
+    const floor = this.props.props;
     this.state = {
       currentPosition: floor.currentPosition,
       visible: {x1: undefined, y1: undefined, x2: undefined, y2: undefined},
+      weaponID: 0,
       hud: {
         health: 100,
-        weapon: weapons[0].name,
-        attack: weapons[0].damage,
+        weapon: undefined,
+        attack: undefined,
         level: 1,
-        nextLevel: 100 + "XP",
+        xp: 0,
+        nextLevel: 100,
       },
       map: floor.floor,
+      floor: 1,
+      monsters: floor.monsters,
     }
   }
 
   componentDidMount() {
     this.setVisibility();
+    this.setWeapons();
     window.addEventListener('keydown', this.keydown);
   }
 
   keydown = (e) => {
     const currPos = this.state.currentPosition;
     let target = {};
-    console.log(currPos);
+    //console.log(currPos);
     switch (e.key) {
       case "w":
       case "ArrowUp":
@@ -264,8 +272,8 @@ class Game extends Component {
       this.battleMonster(target);
     } else if (targetType==="weapon"||targetType==="food") {
       this.pickUpItem(target, targetType);
-    } else {
-      return;
+    } else if(targetType==="stairs") {
+      this.nextFloor();
     }
   }
 
@@ -281,33 +289,62 @@ class Game extends Component {
   }
 
   battleMonster(target) {
-    console.log("battling", target);
-    let updateHud = this.state.hud;
-    updateHud.health -= 5;
+    const state = this.state;
+    const monster = state.monsters[target.x+","+target.y];
+    const playerDamage = Math.round(Math.random()*state.hud.attack);
+    const monsterDamage = Math.round(Math.random()*(monster.attack+(this.state.floor/10)));
+    const updateHud = state.hud;
+    updateHud.health -= monsterDamage;
+    const updateMonsters = state.monsters;
+    updateMonsters[target.x+","+target.y].health -= playerDamage;
+    if (monster.health<=0) {
+      this.movePlayer(undefined, target);
+      const xp = Math.round(Math.random()*((10+this.state.floor/10)-5+1)+5);
+      updateHud.xp += xp;
+      if (updateHud.nextLevel<=updateHud.xp) {
+        updateHud.level++;
+        updateHud.nextLevel = ((updateHud.level/10)+1)*100;
+      }
+    } else if (this.state.hud.health<=0) {
+      console.log("You lose");
+      //TODO: BUILD YOU LOSE MODAL OR SOMETHING SIMILAR
+    }
     this.setState({
-      hud: updateHud
+      hud: updateHud,
+      monsters: updateMonsters,
     })
   }
 
   pickUpItem(target, targetType) {
     const hud = this.state.hud;
+    let nextWeapon = this.state.weaponID;
     if (targetType==="food") {
-      let addHealth = Math.round(Math.random()*(10-5)+5);
+      let addHealth = Math.round(Math.random()*((10+this.state.hud.level)-5)+5);
       hud.health += addHealth;
     } else {
-      console.log("New weapon");
-      //hud.weapon = weapons[1].name;
-      //hud.attack = weapons[1].damage;
+      nextWeapon++;
+      hud.weapon = this.props.props.weapons[nextWeapon].name;
+      hud.attack = this.props.props.weapons[nextWeapon].damage;
     }
     this.setState({
-        hud: hud
+        hud: hud,
+        weaponID: nextWeapon,
     })
-    console.log(target.y,target.x);
     this.movePlayer(undefined,target);
   }
 
-  generateMap() {
-    return populateFloor()
+  nextFloor() {
+    let dungeon = this.state.floor;
+    if (dungeon<5) {
+      dungeon++;
+      const x = populateFloor();
+      this.setState({
+        currentPosition: x.currentPosition,
+        map: x.floor,
+        monsters: x.monsters,
+        floor: dungeon,
+      })
+    }
   }
 
   setVisibility() {
@@ -315,8 +352,17 @@ class Game extends Component {
     this.setState({visible: {x1: currPos.x-10,y1:currPos.y+10,x2:currPos.x+10,y2:currPos.y-10}});
   }
 
+  setWeapons() {
+    const currHud = this.state.hud;
+    currHud.weapon = this.props.props.weapons[this.state.weaponID].name;
+    currHud.attack = this.props.props.weapons[this.state.weaponID].damage;
+    this.setState({
+      hud: currHud,
+    })
+  }
+
   render() {
-    console.log("Game rendering");
+    //console.log("Game rendering");
     return (
       <div id="game">
         <div id="title">Dungeon Crawler</div>
@@ -334,7 +380,7 @@ class App extends Component {
       <nav>
         <a href="https://www.freecodecamp.org/challenges/build-the-game-of-life"><img alt="freeCodeCamp's logo" src="https://s3.amazonaws.com/freecodecamp/freecodecamp_logo.svg"></img></a>
       </nav>
-      <Game />
+      <Game props={populateFloor()}/>
       <footer>
           <p id="signature">Developed by <a href="https:www.mackmmiller.com/">Mackenzie Miller</a></p>
           <p id="credit">Favicon made by <a href="https://www.flaticon.com/authors/twitter" title="Twitter">Twitter</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a> is licensed by <a href="http://creativecommons.org/licenses/by/3.0/" title="Creative Commons BY 3.0">CC 3.0 BY</a></p>
