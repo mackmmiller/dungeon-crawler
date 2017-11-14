@@ -52,7 +52,7 @@ nav {
     #game #visible .row {
       display: flex;
       height: 5%;
-      width: 65%;
+      width: 40%;
       max-width: 600px;
       margin: 0 auto; }
       #game #visible .row .cell {
