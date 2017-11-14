@@ -31,7 +31,7 @@ nav {
       border-radius: 5px;
       width: 20%;
       text-align: center; }
-  #game #screen {
+  #game #visible {
     background-color: black;
     border: 5px solid black;
     border-radius: 5px;
@@ -41,25 +41,29 @@ nav {
     right: 5%;
     top: 23%;
     bottom: 3%; }
-    #game #screen .row {
+    #game #visible .row {
       display: flex;
-      height: 10px; }
-      #game #screen .row .cell {
-        width: 10px;
-        height: 10px; }
-      #game #screen .row .floor {
+      height: 5%;
+      max-height: 15px;
+      width: 33.3333333333%;
+      margin-left: 33.3333333333%;
+      margin-right: 33.3333333333%; }
+      #game #visible .row .cell {
+        width: 15px;
+        height: 100%; }
+      #game #visible .row .floor, #game #visible .row .door {
         background-color: #8e766a; }
-      #game #screen .row .door {
-        background-color: yellow; }
-      #game #screen .row .p {
+      #game #visible .row .empty {
+        background-color: #7e8779; }
+      #game #visible .row .p {
         background-color: blue; }
-      #game #screen .row .m {
+      #game #visible .row .m {
         background-color: red; }
-      #game #screen .row .w {
+      #game #visible .row .w {
         background-color: gold; }
-      #game #screen .row .f {
+      #game #visible .row .f {
         background-color: green; }
-      #game #screen .row .s {
+      #game #visible .row .s {
         background-color: purple; }
 
 footer {

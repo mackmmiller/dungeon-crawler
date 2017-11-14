@@ -174,23 +174,22 @@ class Hud extends Component {
 
 function Map(props) {
   const floor = props.floor;
+  const visible = props.visible;
   let k=1;
   let m=1;
   console.log("Map rendering");
   return (
-    <div id="screen">
+    <div id="visible">
       {floor.map((element,index) => {
-        return(
+        if (index>visible.y2&&index<=visible.y1) {return(
           <div className={"row row"+k++} key={Date.now() + index}>
-          {
-            element.map((cell, i) => {
-              return (
-                <div className={(cell.type==="0")? 'cell' : 'cell ' + cell.type + " " + cell.id} key={i+1} id={m++}></div>
-              );
-            })
+          {element.map((cell, i) => {
+          if (i<=visible.x2&&i>=visible.x1) {return (
+            <div className={(cell.type==="0")? 'cell empty' : 'cell ' + cell.type + " " + cell.id} key={i+1} id={m++}></div>);} else {return null}
+          })
           }
           </div>
-        )
+        )} else {return null}
       })}
     </div>
   );
@@ -200,8 +199,8 @@ class Screen extends Component {
   render() {
     console.log("Screen rendering");
     return (
-    <div>
-      <Map floor={this.props.floor} currentPosition={this.props.currentPosition}/>
+    <div id={"screen"}>
+      <Map floor={this.props.floor} currentPosition={this.props.currentPosition} visible={this.props.visible}/>
     </div>
     )
   }
@@ -210,35 +209,24 @@ class Screen extends Component {
 class Game extends Component {
   constructor(props) {
     super(props);
+    const floor = this.generateMap();
+    const weapons = [{name: "Stick",damage:10},{name: "Pipe",damage:15}];
     this.state = {
-      currentPosition: {
-        x: undefined,
-        y: undefined,
-      },
+      currentPosition: floor.currentPosition,
+      visible: {x1: undefined, y1: undefined, x2: undefined, y2: undefined},
       hud: {
-        health: undefined,
-        weapon: undefined,
-        attack: undefined,
-        level: undefined,
-        nextLevel: undefined,
+        health: 100,
+        weapon: weapons[0].name,
+        attack: weapons[0].damage,
+        level: 1,
+        nextLevel: 100 + "XP",
       },
-      map: [],
+      map: floor.floor,
     }
   }
 
   componentDidMount() {
-    const floor = this.generateMap();
-    this.setState({
-      currentPosition: floor.currentPosition,
-      hud: {
-        health: 100,
-        weapon: "Stick",
-        attack: 10,
-        level: 1,
-        nextLevel: 100 + "XP",
-      },
-      map: floor.floor
-    })
+    this.setVisibility();
     window.addEventListener('keydown', this.keydown);
   }
 
@@ -275,14 +263,13 @@ class Game extends Component {
     } else if (targetType==="monster") {
       this.battleMonster(target);
     } else if (targetType==="weapon"||targetType==="food") {
-      this.pickUpItem(target);
+      this.pickUpItem(target, targetType);
     } else {
       return;
     }
   }
 
-  movePlayer(currPos, target) {
-    console.log(currPos, "moving to", target);
+  movePlayer(currPos = this.state.currentPosition, target) {
     let newMap = this.state.map;
     newMap[currPos.y][currPos.x] = {type: "floor", id:"floor"};
     newMap[target.y][target.x] = {type: "player", id:"p"};
@@ -290,6 +277,7 @@ class Game extends Component {
       currentPosition: target,
       map: newMap,
     })
+    this.setVisibility();
   }
 
   battleMonster(target) {
@@ -301,12 +289,30 @@ class Game extends Component {
     })
   }
 
-  pickUpItem(target) {
-    console.log("picking up", target);
+  pickUpItem(target, targetType) {
+    const hud = this.state.hud;
+    if (targetType==="food") {
+      let addHealth = Math.round(Math.random()*(10-5)+5);
+      hud.health += addHealth;
+    } else {
+      console.log("New weapon");
+      //hud.weapon = weapons[1].name;
+      //hud.attack = weapons[1].damage;
+    }
+    this.setState({
+        hud: hud
+    })
+    console.log(target.y,target.x);
+    this.movePlayer(undefined,target);
   }
 
   generateMap() {
     return populateFloor()
+  }
+
+  setVisibility() {
+    const currPos = this.state.currentPosition;
+    this.setState({visible: {x1: currPos.x-10,y1:currPos.y+10,x2:currPos.x+10,y2:currPos.y-10}});
   }
 
   render() {
@@ -315,7 +321,7 @@ class Game extends Component {
       <div id="game">
         <div id="title">Dungeon Crawler</div>
         <Hud hud={this.state.hud}/>
-        <Screen currentPosition={this.state.currentPosition} floor={this.state.map}/>
+        <Screen currentPosition={this.state.currentPosition} floor={this.state.map} visible={this.state.visible}/>
       </div>
     );
   }
